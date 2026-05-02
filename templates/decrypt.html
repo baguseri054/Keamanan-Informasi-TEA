@@ -18,14 +18,14 @@
 
     <div class="flex flex-col px-28 py-10">
 
-        <h2 class="text-5xl font-bold mb-8">
+        <h2 class="text-5xl text-[#163b42] font-bold mb-8">
             Dekripsi Pesan
         </h2>
 
         <!-- RESULT -->
         {% if result %}
 
-        <div class="mb-2 border rounded-2xl p-6 bg-green-50 shadow-sm">
+        <div class="mb-2 border border-green-300 rounded-2xl p-6 bg-green-50 shadow-sm">
 
             <h3 class="text-2xl font-bold text-green-700 mb-4">
                 Hasil Dekripsi
@@ -47,7 +47,7 @@
         <div class="grid grid-cols-2 gap-2 items-stretch">
 
             <!-- LEFT -->
-            <div class="border rounded-2xl h-[70vh] p-6 bg-white shadow-sm">
+            <div class="border border-gray-200 rounded-2xl h-[70vh] p-6 bg-white shadow-sm">
 
                 <form method="POST"
                       enctype="multipart/form-data"
@@ -58,7 +58,7 @@
                       name="image"
                       id="imageInput"
                       accept=".png,.bmp"
-                      class="file:border file:py-2 file:px-4 file:rounded-md file:mr-4 file:cursor-pointer"
+                      class="file:border file:bg-gray-100 file:border-gray-500 file:py-2 file:px-4 file:rounded-md file:mr-4 file:cursor-pointer"
                       required
                     />
 
@@ -116,7 +116,7 @@
 
                     <button
                       type="submit"
-                      class="mt-4 px-4 py-3 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
+                      class="mt-4 px-4 py-3 rounded-xl bg-[#163b42] text-white hover:bg-[#163b42] cursor-pointer transition"
                     >
 
                         Decrypt
@@ -128,7 +128,7 @@
             </div>
 
             <!-- RIGHT -->
-            <div class="border rounded-2xl bg-white shadow-sm flex justify-center items-center h-[70vh] p-6">
+            <div class="border  border-gray-200 rounded-2xl bg-white shadow-sm flex justify-center items-center h-[70vh] p-6">
 
                 <div class="w-full h-[500px] bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
 

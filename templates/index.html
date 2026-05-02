@@ -13,7 +13,7 @@
 
 <div class="flex flex-col px-28 pt-10">
 
-  <h2 class="text-5xl font-bold mb-8">
+  <h2 class="text-5xl font-bold text-[#163b42] mb-8">
     Enkripsi & Embed Pesan
   </h2>
 
@@ -23,7 +23,7 @@
   <div class="grid grid-cols-2 gap-2 mb-2">
 
     <!-- LEFT -->
-    <div class="border rounded-2xl p-6 bg-green-50">
+    <div class="border border-green-300 rounded-2xl p-6 bg-green-50">
 
       <h3 class="text-2xl font-bold text-green-700 mb-4">
         Encrypt Berhasil
@@ -52,7 +52,7 @@
     </div>
 
     <!-- RIGHT -->
-    <div class="border rounded-2xl p-6 bg-blue-50 flex flex-col justify-between">
+    <div class="border border-blue-300 rounded-2xl p-6 bg-blue-50 flex flex-col justify-between">
 
       <div>
 
@@ -88,7 +88,7 @@
   <div class="grid grid-cols-2 gap-2 mb-8 items-stretch">
 
     <!-- LEFT COLUMN -->
-    <div class="border rounded-2xl p-6 bg-white shadow-sm h-[70vh]">
+    <div class="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm h-[70vh]">
 
       <form method="POST"
             enctype="multipart/form-data"
@@ -99,7 +99,7 @@
           name="image"
           id="imageInput"
           accept=".png,.bmp"
-          class="file:border file:py-2 file:px-4 file:rounded-md file:mr-4 file:cursor-pointer"
+          class="file:border file:bg-gray-100 file:border-gray-500 file:py-2 file:px-4 file:rounded-md file:mr-4 file:cursor-pointer"
           required
         />
 
@@ -172,11 +172,9 @@
 
         <button
           type="submit"
-          class="mt-4 px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+          class="mt-4 px-4 py-3 rounded-xl bg-[#163b42] text-white cursor-pointer hover:opacity-80 transition"
         >
-
           Encrypt
-
         </button>
 
       </form>
@@ -184,7 +182,7 @@
     </div>
 
     <!-- RIGHT COLUMN -->
-    <div class="border rounded-2xl bg-white shadow-sm overflow-hidden flex justify-center items-center h-[70vh] p-6">
+    <div class="border  border-gray-200 rounded-2xl bg-white shadow-sm overflow-hidden flex justify-center items-center h-[70vh] p-6">
 
       <div class="w-full h-[500px] flex items-center justify-center bg-gray-100 overflow-hidden">
 
