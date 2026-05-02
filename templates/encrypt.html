@@ -5,59 +5,7 @@
 </head>
 <body>
 
-<h2>Enkripsi & Embed Pesan</h2>
 
-<form method="POST" enctype="multipart/form-data">
-
-    <input type="file" name="image" required>
-    <br><br>
-
-    <textarea name="message"
-              placeholder="Pesan Rahasia"
-              required></textarea>
-
-    <br><br>
-
-    <input type="text"
-           name="key"
-           placeholder="Kunci Vigenere"
-           required>
-
-    <br><br>
-
-    <input type="text"
-           name="r"
-           placeholder="R Chaos"
-           required>
-
-    <br><br>
-
-    <input type="text"
-           name="x0"
-           placeholder="X0 Chaos"
-           required>
-
-    <br><br>
-
-    <button type="submit">
-        Encrypt
-    </button>
-
-</form>
-
-{% if success %}
-
-<h3>Berhasil</h3>
-
-<p>PSNR: {{ psnr }} dB</p>
-
-<p>SSIM: {{ ssim }}</p>
-
-<a href="/download">
-    Download Stego Image
-</a>
-
-{% endif %}
 
 </body>
 </html>

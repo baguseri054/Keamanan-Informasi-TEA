@@ -1,19 +1,245 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Steganografi</title>
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='dist/output.css') }}"
+    />
+  </head>
 
-<h1>Sistem Hybrid Vigenere & Chaotic LSB</h1>
+  <body class="bg-gray-100 min-h-screen">
+    {% include 'components/navbar.html' %}
 
-<a href="/encrypt">
-    <button>Enkripsi</button>
-</a>
+<div class="flex flex-col px-28 pt-10">
 
-<a href="/decrypt">
-    <button>Dekripsi</button>
-</a>
+  <h2 class="text-5xl font-bold mb-8">
+    Enkripsi & Embed Pesan
+  </h2>
 
-</body>
+  <!-- SUCCESS SECTION -->
+  {% if success %}
+
+  <div class="grid grid-cols-2 gap-2 mb-2">
+
+    <!-- LEFT -->
+    <div class="border rounded-2xl p-6 bg-green-50">
+
+      <h3 class="text-2xl font-bold text-green-700 mb-4">
+        Encrypt Berhasil
+      </h3>
+
+      <div class="space-y-2 text-lg">
+
+        <p>
+          <span class="font-semibold">
+            PSNR:
+          </span>
+
+          {{ psnr }} dB
+        </p>
+
+        <p>
+          <span class="font-semibold">
+            SSIM:
+          </span>
+
+          {{ ssim }}
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="border rounded-2xl p-6 bg-blue-50 flex flex-col justify-between">
+
+      <div>
+
+        <h3 class="text-2xl font-bold text-blue-700 mb-4">
+          Output File
+        </h3>
+
+        <p class="text-gray-700">
+          Stego image berhasil dibuat dan siap diunduh.
+        </p>
+
+      </div>
+
+      <a href="/download" class="mt-6">
+
+        <button
+          class="w-full px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+        >
+
+          Download Stego Image
+
+        </button>
+
+      </a>
+
+    </div>
+
+  </div>
+
+  {% endif %}
+
+  <!-- MAIN GRID -->
+  <div class="grid grid-cols-2 gap-2 mb-8 items-stretch">
+
+    <!-- LEFT COLUMN -->
+    <div class="border rounded-2xl p-6 bg-white shadow-sm h-[70vh]">
+
+      <form method="POST"
+            enctype="multipart/form-data"
+            class="grid gap-4 h-full">
+
+        <input
+          type="file"
+          name="image"
+          id="imageInput"
+          accept=".png,.bmp"
+          class="file:border file:py-2 file:px-4 file:rounded-md file:mr-4 file:cursor-pointer"
+          required
+        />
+
+        <div>
+
+          <label for="message" class="block mb-2 font-medium">
+            Pesan Rahasia
+          </label>
+
+          <textarea
+            name="message"
+            placeholder="Pesan Rahasia"
+            class="px-3 py-2 w-full border rounded-md h-32"
+            required
+          ></textarea>
+
+        </div>
+
+        <div>
+
+          <label for="key" class="block mb-2 font-medium">
+            Kunci Vigenere
+          </label>
+
+          <input
+            type="text"
+            name="key"
+            placeholder="Kunci Vigenere"
+            class="px-3 py-2 w-full border rounded-md"
+            required
+          />
+
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+
+          <div>
+
+            <label for="r" class="block mb-2 font-medium">
+              R Chaos
+            </label>
+
+            <input
+              type="text"
+              name="r"
+              placeholder="3.99"
+              class="px-3 py-2 w-full border rounded-md"
+              required
+            />
+
+          </div>
+
+          <div>
+
+            <label for="x0" class="block mb-2 font-medium">
+              X0 Chaos
+            </label>
+
+            <input
+              type="text"
+              name="x0"
+              placeholder="0.5"
+              class="px-3 py-2 w-full border rounded-md"
+              required
+            />
+
+          </div>
+
+        </div>
+
+        <button
+          type="submit"
+          class="mt-4 px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+        >
+
+          Encrypt
+
+        </button>
+
+      </form>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="border rounded-2xl bg-white shadow-sm overflow-hidden flex justify-center items-center h-[70vh] p-6">
+
+      <div class="w-full h-[500px] flex items-center justify-center bg-gray-100 overflow-hidden">
+
+        <img
+          id="previewImage"
+          src=""
+          alt="Preview"
+          class="hidden max-w-full max-h-full object-contain"
+        />
+
+        <p id="placeholderText"
+           class="text-gray-400 text-lg">
+
+          Preview gambar akan muncul di sini
+
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+    <script>
+
+const imageInput = document.getElementById('imageInput');
+
+const previewImage = document.getElementById('previewImage');
+
+const placeholderText = document.getElementById('placeholderText');
+
+imageInput.addEventListener('change', function(event){
+
+    const file = event.target.files[0];
+
+    if(file){
+
+        const reader = new FileReader();
+
+        reader.onload = function(e){
+
+            previewImage.src = e.target.result;
+
+            previewImage.classList.remove('hidden');
+
+            placeholderText.classList.add('hidden');
+        };
+
+        reader.readAsDataURL(file);
+    }
+
+});
+
+</script>
+  </body>
 </html>

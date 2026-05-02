@@ -1,54 +1,193 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
     <title>Decrypt</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='dist/output.css') }}"
+    />
+
 </head>
-<body>
 
-<h2>Dekripsi Pesan</h2>
+<body class="bg-gray-100 min-h-screen">
 
-<form method="POST" enctype="multipart/form-data">
+    {% include 'components/navbar.html' %}
 
-    <input type="file"
-           name="image"
-           required>
+    <div class="flex flex-col px-28 py-10">
 
-    <br><br>
+        <h2 class="text-5xl font-bold mb-8">
+            Dekripsi Pesan
+        </h2>
 
-    <input type="text"
-           name="key"
-           placeholder="Kunci"
-           required>
+        <!-- RESULT -->
+        {% if result %}
 
-    <br><br>
+        <div class="mb-2 border rounded-2xl p-6 bg-green-50 shadow-sm">
 
-    <input type="text"
-           name="r"
-           placeholder="R Chaos"
-           required>
+            <h3 class="text-2xl font-bold text-green-700 mb-4">
+                Hasil Dekripsi
+            </h3>
 
-    <br><br>
+            <div class="bg-white border rounded-xl p-5">
 
-    <input type="text"
-           name="x0"
-           placeholder="X0 Chaos"
-           required>
+                <p class="break-words text-lg leading-relaxed">
+                    {{ result }}
+                </p>
 
-    <br><br>
+            </div>
 
-    <button type="submit">
-        Decrypt
-    </button>
+        </div>
 
-</form>
+        {% endif %}
 
-{% if result %}
+        <!-- MAIN GRID -->
+        <div class="grid grid-cols-2 gap-2 items-stretch">
 
-<h3>Hasil:</h3>
+            <!-- LEFT -->
+            <div class="border rounded-2xl h-[70vh] p-6 bg-white shadow-sm">
 
-<p>{{ result }}</p>
+                <form method="POST"
+                      enctype="multipart/form-data"
+                      class="grid gap-4">
 
-{% endif %}
+                    <input
+                      type="file"
+                      name="image"
+                      id="imageInput"
+                      accept=".png,.bmp"
+                      class="file:border file:py-2 file:px-4 file:rounded-md file:mr-4 file:cursor-pointer"
+                      required
+                    />
+
+                    <div>
+
+                        <label class="block mb-2 font-medium">
+                            Kunci Vigenere
+                        </label>
+
+                        <input
+                          type="text"
+                          name="key"
+                          placeholder="Masukkan Kunci"
+                          class="px-3 py-2 w-full border rounded-md"
+                          required
+                        />
+
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+
+                        <div>
+
+                            <label class="block mb-2 font-medium">
+                                R Chaos
+                            </label>
+
+                            <input
+                              type="text"
+                              name="r"
+                              placeholder="3.99"
+                              class="px-3 py-2 w-full border rounded-md"
+                              required
+                            />
+
+                        </div>
+
+                        <div>
+
+                            <label class="block mb-2 font-medium">
+                                X0 Chaos
+                            </label>
+
+                            <input
+                              type="text"
+                              name="x0"
+                              placeholder="0.5"
+                              class="px-3 py-2 w-full border rounded-md"
+                              required
+                            />
+
+                        </div>
+
+                    </div>
+
+                    <button
+                      type="submit"
+                      class="mt-4 px-4 py-3 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
+                    >
+
+                        Decrypt
+
+                    </button>
+
+                </form>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="border rounded-2xl bg-white shadow-sm flex justify-center items-center h-[70vh] p-6">
+
+                <div class="w-full h-[500px] bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+
+                    <img
+                      id="previewImage"
+                      src=""
+                      alt="Preview"
+                      class="hidden max-w-full max-h-full object-contain rounded-lg"
+                    />
+
+                    <p id="placeholderText"
+                       class="text-gray-400 text-lg">
+
+                        Preview gambar akan muncul di sini
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- IMAGE PREVIEW -->
+    <script>
+
+    const imageInput = document.getElementById('imageInput');
+
+    const previewImage = document.getElementById('previewImage');
+
+    const placeholderText = document.getElementById('placeholderText');
+
+    imageInput.addEventListener('change', function(event){
+
+        const file = event.target.files[0];
+
+        if(file){
+
+            const reader = new FileReader();
+
+            reader.onload = function(e){
+
+                previewImage.src = e.target.result;
+
+                previewImage.classList.remove('hidden');
+
+                placeholderText.classList.add('hidden');
+
+            };
+
+            reader.readAsDataURL(file);
+
+        }
+
+    });
+
+    </script>
 
 </body>
 </html>

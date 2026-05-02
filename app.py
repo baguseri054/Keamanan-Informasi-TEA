@@ -141,7 +141,7 @@ def home():
 # ENCRYPT
 # ==========================================
 
-@app.route("/encrypt", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def encrypt():
 
     if request.method == "POST":
@@ -189,14 +189,14 @@ def encrypt():
         )
 
         return render_template(
-            "encrypt.html",
+            "index.html",
             success=True,
             psnr=round(nilai_psnr, 2),
             ssim=round(nilai_ssim, 5),
             image_path="stego.png"
         )
 
-    return render_template("encrypt.html")
+    return render_template("index.html")
 
 # ==========================================
 # DOWNLOAD
