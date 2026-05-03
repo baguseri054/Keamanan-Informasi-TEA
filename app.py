@@ -41,9 +41,17 @@ def vigenere_decrypt(ciphertext, key):
 # ==========================================
 
 def generate_chaotic_indices(r, x0, total_pixels, required_length):
+    if not (3.7 <= r <= 3.999):
+        raise ValueError("FATAL: Parameter R harus berada di antara 3.7 hingga 3.999. Di luar rentang ini, rumus kehilangan sifat acaknya.")
+    if x0 <= 0.0 or x0 >= 1.0 or x0 == 0.5:
+        raise ValueError("FATAL: X0 harus di antara 0.01 hingga 0.99 dan tidak boleh persis 0.5")
+        
+    curr_x = x0
+    for _ in range(1000):
+        curr_x = r * curr_x * (1 - curr_x)
+        
     chaos = np.zeros(total_pixels)
-    chaos[0] = x0
-
+    chaos[0] = curr_x
     for i in range(1, total_pixels):
         chaos[i] = r * chaos[i-1] * (1 - chaos[i-1])
 
