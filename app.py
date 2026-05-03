@@ -111,7 +111,7 @@ def extract_message(stego_img, key, r, x0):
 
     total_pixels = stego_img.size
 
-    max_bits_to_extract = min(10000, total_pixels)
+    max_bits_to_extract = total_pixels
 
     indices = generate_chaotic_indices(
         r,
@@ -196,11 +196,13 @@ def encrypt():
             channel_axis=2
         )
 
+        ssim_str = str(nilai_ssim)[:7]
+
         return render_template(
             "index.html",
             success=True,
             psnr=round(nilai_psnr, 2),
-            ssim=round(nilai_ssim, 5),
+            ssim=ssim_str,
             image_path="stego.png"
         )
 
