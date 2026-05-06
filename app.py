@@ -11,10 +11,11 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 OUTPUT_FOLDER = "outputs"
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True) # kalau folder belum ada = buat folder
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-DELIMITER = "###EOF###"
+# delimiter bekerja sebagai penanda akhir pesan, agar saat decrypt program tahu kapan pesan selesai dibaca.
+DELIMITER = "###EOF###" 
 
 # ==========================================
 # VIGENERE
@@ -107,35 +108,62 @@ def embed_message(img, message, key, r, x0):
 
 def extract_message(stego_img, key, r, x0):
 
-    flat_img = stego_img.flatten()
+    try:
 
-    total_pixels = stego_img.size
+        flat_img = stego_img.flatten()
 
-    max_bits_to_extract = total_pixels
+        total_pixels = stego_img.size
 
-    indices = generate_chaotic_indices(
-        r,
-        x0,
-        total_pixels,
-        max_bits_to_extract
-    )
+        # Batasi ekstraksi
+        max_bits_to_extract = min(3000, total_pixels)
 
-    binary_msg = ""
+        indices = generate_chaotic_indices(
+            r,
+            x0,
+            total_pixels,
+            max_bits_to_extract
+        )
 
-    for idx in indices:
+        binary_msg = ""
 
-        binary_msg += str(flat_img[idx] & 1)
+        for idx in indices:
 
-        if len(binary_msg) % 8 == 0:
+            binary_msg += str(flat_img[idx] & 1)
 
-            current_text = binary_to_text(binary_msg)
+            # per 8 bit = 1 karakter
+            if len(binary_msg) % 8 == 0:
 
-            decrypted_text = vigenere_decrypt(current_text, key)
+                current_text = binary_to_text(binary_msg)
 
-            if decrypted_text.endswith(DELIMITER):
-                return decrypted_text[:-len(DELIMITER)]
+                try:
 
-    return "Pesan tidak ditemukan"
+                    decrypted_text = vigenere_decrypt(
+                        current_text,
+                        key
+                    )
+
+                    # delimiter ditemukan
+                    if decrypted_text.endswith(DELIMITER):
+
+                        result = decrypted_text[
+                            :-len(DELIMITER)
+                        ]
+
+                        # validasi printable chars
+                        if result.isprintable():
+
+                            return result
+
+                except:
+                    continue
+
+        return None
+
+    except Exception as e:
+
+        print("Extract Error:", e)
+
+        return None
 
 # ==========================================
 # ROUTES
@@ -228,34 +256,57 @@ def decrypt():
 
     if request.method == "POST":
 
-        file = request.files["image"]
+        try:
 
-        key = request.form["key"]
+            file = request.files["image"]
 
-        r = float(request.form["r"])
+            key = request.form["key"]
 
-        x0 = float(request.form["x0"])
+            r = float(request.form["r"])
 
-        upload_path = os.path.join(
-            UPLOAD_FOLDER,
-            file.filename
-        )
+            x0 = float(request.form["x0"])
 
-        file.save(upload_path)
+            upload_path = os.path.join(
+                UPLOAD_FOLDER,
+                file.filename
+            )
 
-        img = cv2.imread(upload_path)
+            file.save(upload_path)
 
-        result = extract_message(
-            img,
-            key,
-            r,
-            x0
-        )
+            img = cv2.imread(upload_path)
 
-        return render_template(
-            "decrypt.html",
-            result=result
-        )
+            if img is None:
+
+                return render_template(
+                    "decrypt.html",
+                    error="Gambar gagal dibaca."
+                )
+
+            result = extract_message(
+                img,
+                key,
+                r,
+                x0
+            )
+
+            if result is None:
+
+                return render_template(
+                    "decrypt.html",
+                    error="Pesan tidak ditemukan. Kemungkinan gambar bukan stego image atau kunci salah."
+                )
+
+            return render_template(
+                "decrypt.html",
+                result=result
+            )
+
+        except Exception as e:
+
+            return render_template(
+                "decrypt.html",
+                error=f"Terjadi kesalahan: {str(e)}"
+            )
 
     return render_template("decrypt.html")
 

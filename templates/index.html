@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Steganografi</title>
+    <title>Aplikasi Enkripsi/Dekripsi</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='dist/output.css') }}"
@@ -120,7 +120,7 @@
 
         <div>
 
-          <label for="key" class="block mb-2 font-medium">
+          <label for="key" class="block mb-2 font-medium" title="kata atau kombinasi karakter yang digunakan untuk mengenkripsi dan mendekripsi pesan dengan metode Vigenere Cipher">
             Kunci Vigenere
           </label>
 
@@ -138,7 +138,7 @@
 
           <div>
 
-            <label for="r" class="block mb-2 font-medium">
+            <label for="r" class="block mb-2 font-medium" title="Parameter pengendali tingkat kekacauan (chaos) pada rumus Logistic Map.">
               R Chaos
             </label>
 
@@ -154,7 +154,7 @@
 
           <div>
 
-            <label for="x0" class="block mb-2 font-medium">
+            <label for="x0" class="block mb-2 font-medium" title="Nilai awal (initial value / seed) dari Logistic Map.">
               X0 Chaos
             </label>
 
