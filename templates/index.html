@@ -1,243 +1,110 @@
 <!doctype html>
 <html>
   <head>
-    <title>Aplikasi Enkripsi/Dekripsi</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='dist/output.css') }}"
-    />
+    <title>TEA - Enkripsi & Visualisasi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}" />
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-
   <body class="bg-gray-100 min-h-screen">
     {% include 'components/navbar.html' %}
 
-<div class="flex flex-col px-28 pt-10">
+    <div class="flex flex-col px-28 pt-10 pb-16">
+      <h2 class="text-5xl font-bold text-[#163b42] mb-8">
+        Enkripsi Teks (Plaintext &rarr; Ciphertext)
+      </h2>
 
-  <h2 class="text-5xl font-bold text-[#163b42] mb-8">
-    Enkripsi & Embed Pesan
-  </h2>
-
-  <!-- SUCCESS SECTION -->
-  {% if success %}
-
-  <div class="grid grid-cols-2 gap-2 mb-2">
-
-    <!-- LEFT -->
-    <div class="border border-green-300 rounded-2xl p-6 bg-green-50">
-
-      <h3 class="text-2xl font-bold text-green-700 mb-4">
-        Encrypt Berhasil
-      </h3>
-
-      <div class="space-y-2 text-lg">
-
-        <p>
-          <span class="font-semibold">
-            PSNR:
-          </span>
-
-          {{ psnr }} dB
-        </p>
-
-        <p>
-          <span class="font-semibold">
-            SSIM:
-          </span>
-
-          {{ ssim }}
-        </p>
-
+      {% if result and result.error %}
+      <div class="mb-6 border border-red-300 bg-red-50 rounded-2xl p-6 shadow-sm">
+        <h3 class="text-2xl font-bold text-red-700 mb-2">Terjadi Kesalahan</h3>
+        <p class="text-red-600">{{ result.error }}</p>
       </div>
+      {% endif %}
 
-    </div>
-
-    <!-- RIGHT -->
-    <div class="border border-blue-300 rounded-2xl p-6 bg-blue-50 flex flex-col justify-between">
-
-      <div>
-
-        <h3 class="text-2xl font-bold text-blue-700 mb-4">
-          Output File
-        </h3>
-
-        <p class="text-gray-700">
-          Stego image berhasil dibuat dan siap diunduh.
-        </p>
-
+      {% if result and not result.error %}
+      <div class="grid grid-cols-1 gap-4 mb-6">
+        <div class="border border-green-300 rounded-2xl p-6 bg-green-50 shadow-sm">
+          <h3 class="text-2xl font-bold text-green-700 mb-4">Proses Enkripsi Sukses</h3>
+          <div class="space-y-3 font-mono text-sm">
+            <p class="bg-white p-3 rounded-xl border"><span class="font-bold text-gray-500 block text-xs mb-1">PLAINTEXT ASLI:</span> <span class="text-gray-800 break-all">{{ result.input }}</span></p>
+            <p class="bg-white p-3 rounded-xl border border-green-200"><span class="font-bold text-green-600 block text-xs mb-1">CIPHERTEXT (HEXADECIMAL):</span> <span class="text-xl text-green-700 font-bold break-all">{{ result.output }}</span></p>
+          </div>
+        </div>
       </div>
+      {% endif %}
 
-      <a href="/download" class="mt-6">
+      <div class="grid grid-cols-2 gap-6 items-stretch mb-8">
+        <div class="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm flex flex-col justify-between">
+          <form method="POST" class="space-y-5">
+            <div>
+              <label for="message" class="block mb-2 font-medium text-gray-700">Pesan Rahasia (Plaintext)</label>
+              <textarea name="message" placeholder="Ketik pesan rahasia yang ingin dienkripsi di sini..." class="px-4 py-3 w-full border rounded-xl h-36 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#163b42]" required>{{ result.input if result and not result.error else '' }}</textarea>
+            </div>
 
-        <button
-          class="w-full px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
-        >
+            <div>
+              <label for="key" class="block mb-2 font-medium text-gray-700" title="Kunci teks bebas yang nantinya dikonversi otomatis menjadi format 128-bit standar TEA.">
+                Kunci Rahasia (Passphrase Teks)
+              </label>
+              <input type="text" name="key" placeholder="Masukkan kata kunci pengaman..." class="px-4 py-3 w-full border rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#163b42]" required />
+            </div>
 
-          Download Stego Image
-
-        </button>
-
-      </a>
-
-    </div>
-
-  </div>
-
-  {% endif %}
-
-  <!-- MAIN GRID -->
-  <div class="grid grid-cols-2 gap-2 mb-8 items-stretch">
-
-    <!-- LEFT COLUMN -->
-    <div class="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm h-[70vh]">
-
-      <form method="POST"
-            enctype="multipart/form-data"
-            class="grid gap-4 h-full">
-
-        <input
-          type="file"
-          name="image"
-          id="imageInput"
-          accept=".png,.bmp"
-          class="file:border file:bg-gray-100 file:border-gray-500 file:py-2 file:px-4 file:rounded-md file:mr-4 file:cursor-pointer"
-          required
-        />
-
-        <div>
-
-          <label for="message" class="block mb-2 font-medium">
-            Pesan Rahasia
-          </label>
-
-          <textarea
-            name="message"
-            placeholder="Pesan Rahasia"
-            class="px-3 py-2 w-full border rounded-md h-32"
-            required
-          ></textarea>
-
+            <button type="submit" class="w-full px-4 py-3.5 rounded-xl bg-[#163b42] text-white font-semibold cursor-pointer hover:opacity-90 transition shadow-md">
+              Mulai Enkripsi & Lacak Putaran
+            </button>
+          </form>
         </div>
 
-        <div>
-
-          <label for="key" class="block mb-2 font-medium" title="kata atau kombinasi karakter yang digunakan untuk mengenkripsi dan mendekripsi pesan dengan metode Vigenere Cipher">
-            Kunci Vigenere
-          </label>
-
-          <input
-            type="text"
-            name="key"
-            placeholder="Kunci Vigenere"
-            class="px-3 py-2 w-full border rounded-md"
-            required
-          />
-
+        <div class="border border-gray-200 rounded-2xl bg-white shadow-sm p-6 flex flex-col justify-center text-center">
+          <div class="max-w-md mx-auto">
+            <div class="w-16 h-16 bg-blue-50 text-[#163b42] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">ℹ️</div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Mekanisme Kerja Algoritma</h3>
+            <p class="text-gray-500 text-sm leading-relaxed">
+              Teks input akan dibagi ke dalam segmen kelompok blok data berukuran <strong>64-bit (8 karakter)</strong>. Apabila panjang teks tidak memenuhi kelipatan, sistem otomatis menginjeksikan skema <strong>Padding PKCS7</strong> sebelum mengarsitekturnya ke dalam tabel 32 putaran internal.
+            </p>
+          </div>
         </div>
+      </div>
 
-        <div class="grid grid-cols-2 gap-4">
-
-          <div>
-
-            <label for="r" class="block mb-2 font-medium" title="Parameter pengendali tingkat kekacauan (chaos) pada rumus Logistic Map.">
-              R Chaos
-            </label>
-
-            <input
-              type="text"
-              name="r"
-              placeholder="3.99"
-              class="px-3 py-2 w-full border rounded-md"
-              required
-            />
-
+      {% if result and not result.error %}
+      <div class="mt-4 space-y-8">
+        <h3 class="text-3xl font-bold text-[#163b42] border-b pb-2">Analisis Visual Eksekusi Putaran TEA</h3>
+        
+        {% for block in result.logs %}
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex flex-wrap justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100 gap-2">
+            <span class="font-mono font-bold text-amber-700 text-base">SEGMEN DATA BLOK #{{ block.index }} (Hex Mentah: {{ block.raw }})</span>
+            <span class="font-mono text-xs text-gray-600">Register Masukan &rarr; v0: <b class="text-blue-600">{{ block.init[0] }}</b> | v1: <b class="text-blue-600">{{ block.init[1] }}</b></span>
           </div>
 
-          <div>
-
-            <label for="x0" class="block mb-2 font-medium" title="Nilai awal (initial value / seed) dari Logistic Map.">
-              X0 Chaos
-            </label>
-
-            <input
-              type="text"
-              name="x0"
-              placeholder="0.55"
-              class="px-3 py-2 w-full border rounded-md"
-              required
-            />
-
+          <div class="overflow-x-auto rounded-xl border border-gray-200">
+            <table class="w-full font-mono text-xs text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 border-b">
+                  <th class="p-3 text-center border-r w-20">Round</th>
+                  <th class="p-3 border-r">Accumulator Value (Sum)</th>
+                  <th class="p-3 border-r text-blue-700">Register v0 (32-bit)</th>
+                  <th class="p-3 text-emerald-700">Register v1 (32-bit)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                {% for r in block.rounds %}
+                <tr class="hover:bg-slate-50/80 transition">
+                  <td class="p-2.5 text-center font-bold text-gray-400 bg-gray-50 border-r">{{ r.round }}</td>
+                  <td class="p-2.5 text-gray-600 border-r">{{ r.sum }}</td>
+                  <td class="p-2.5 text-blue-600 font-semibold border-r">{{ r.v0 }}</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">{{ r.v1 }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
 
+          <div class="bg-gray-50 p-3 rounded-xl border text-right font-mono text-xs text-gray-700">
+            Status Register Output Blok &rarr; v0: <span class="text-amber-600 font-bold">{{ block.final[0] }}</span> | v1: <span class="text-amber-600 font-bold">{{ block.final[1] }}</span>
+          </div>
         </div>
-
-        <button
-          type="submit"
-          class="mt-4 px-4 py-3 rounded-xl bg-[#163b42] text-white cursor-pointer hover:opacity-80 transition"
-        >
-          Encrypt
-        </button>
-
-      </form>
-
-    </div>
-
-    <!-- RIGHT COLUMN -->
-    <div class="border  border-gray-200 rounded-2xl bg-white shadow-sm overflow-hidden flex justify-center items-center h-[70vh] p-6">
-
-      <div class="w-full h-[500px] flex items-center justify-center bg-gray-100 overflow-hidden">
-
-        <img
-          id="previewImage"
-          src=""
-          alt="Preview"
-          class="hidden max-w-full max-h-full object-contain"
-        />
-
-        <p id="placeholderText"
-           class="text-gray-400 text-lg">
-
-          Preview gambar akan muncul di sini
-
-        </p>
-
+        {% endfor %}
       </div>
-
+      {% endif %}
     </div>
-
-  </div>
-
-</div>
-
-    <script>
-
-const imageInput = document.getElementById('imageInput');
-
-const previewImage = document.getElementById('previewImage');
-
-const placeholderText = document.getElementById('placeholderText');
-
-imageInput.addEventListener('change', function(event){
-
-    const file = event.target.files[0];
-
-    if(file){
-
-        const reader = new FileReader();
-
-        reader.onload = function(e){
-
-            previewImage.src = e.target.result;
-
-            previewImage.classList.remove('hidden');
-
-            placeholderText.classList.add('hidden');
-        };
-
-        reader.readAsDataURL(file);
-    }
-
-});
-
-</script>
   </body>
 </html>

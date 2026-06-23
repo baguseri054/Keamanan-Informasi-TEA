@@ -1,314 +1,150 @@
-from flask import Flask, render_template, request, send_file
-import numpy as np
-import cv2
-import os
-
-from skimage.metrics import structural_similarity as ssim
-from skimage.metrics import peak_signal_noise_ratio as psnr
+import struct
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
-OUTPUT_FOLDER = "outputs"
-
-os.makedirs(UPLOAD_FOLDER, exist_ok=True) # kalau folder belum ada = buat folder
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
-# delimiter bekerja sebagai penanda akhir pesan, agar saat decrypt program tahu kapan pesan selesai dibaca.
-DELIMITER = "###EOF###" 
+DELTA = 0x9E3779B9
 
 # ==========================================
-# VIGENERE
+# PADDING UTILITY (PKCS7)
 # ==========================================
+def pad(data: bytes) -> bytes:
+    padding_len = 8 - (len(data) % 8)
+    return data + bytes([padding_len] * padding_len)
 
-def vigenere_encrypt(plaintext, key):
-    ciphertext = ""
-    for i in range(len(plaintext)):
-        char = plaintext[i]
-        key_char = key[i % len(key)]
-        ciphertext += chr((ord(char) + ord(key_char)) % 256)
-    return ciphertext
-
-def vigenere_decrypt(ciphertext, key):
-    plaintext = ""
-    for i in range(len(ciphertext)):
-        char = ciphertext[i]
-        key_char = key[i % len(key)]
-        plaintext += chr((ord(char) - ord(key_char)) % 256)
-    return plaintext
+def unpad(data: bytes) -> bytes:
+    padding_len = data[-1]
+    if padding_len > 8 or padding_len < 1:
+        raise ValueError("Padding hancur atau kunci verifikasi keliru.")
+    return data[:-padding_len]
 
 # ==========================================
-# CHAOS
+# PARSE STRING KEY INTO 4 SUBKEYS (128-BIT)
 # ==========================================
-
-def generate_chaotic_indices(r, x0, total_pixels, required_length):
-    if not (3.7 <= r <= 3.999):
-        raise ValueError("FATAL: Parameter R harus berada di antara 3.7 hingga 3.999. Di luar rentang ini, rumus kehilangan sifat acaknya.")
-    if x0 <= 0.0 or x0 >= 1.0 or x0 == 0.5:
-        raise ValueError("FATAL: X0 harus di antara 0.01 hingga 0.99 dan tidak boleh persis 0.5")
-        
-    curr_x = x0
-    for _ in range(1000):
-        curr_x = r * curr_x * (1 - curr_x)
-        
-    chaos = np.zeros(total_pixels)
-    chaos[0] = curr_x
-    for i in range(1, total_pixels):
-        chaos[i] = r * chaos[i-1] * (1 - chaos[i-1])
-
-    indices = np.argsort(chaos)
-    return indices[:required_length]
+def parse_key_string(key_str: str) -> list:
+    """Mengubah passphrase teks input dari web menjadi 4 blok subkey integer 32-bit."""
+    key_bytes = key_str.encode('utf-8')
+    if len(key_bytes) < 16:
+        key_bytes = key_bytes + b'\x00' * (16 - len(key_bytes))
+    else:
+        key_bytes = key_bytes[:16]
+    return list(struct.unpack('>4L', key_bytes))
 
 # ==========================================
-# BINARY
+# INTI OPERATIONS DENGAN TRACING STATUS
 # ==========================================
+def encipher_block_trace(v, k):
+    v0, v1 = v[0], v[1]
+    k0, k1, k2, k3 = k[0], k[1], k[2], k[3]
+    sum_val = 0
+    trace = []
+    for r in range(32):
+        sum_val = (sum_val + DELTA) & 0xFFFFFFFF
+        v0 = (v0 + (((v1 << 4) + k0) ^ (v1 + sum_val) ^ ((v1 >> 5) + k1))) & 0xFFFFFFFF
+        v1 = (v1 + (((v0 << 4) + k2) ^ (v0 + sum_val) ^ ((v0 >> 5) + k3))) & 0xFFFFFFFF
+        trace.append({
+            'round': r + 1,
+            'sum': f"0x{sum_val:08X}",
+            'v0': f"0x{v0:08X}",
+            'v1': f"0x{v1:08X}"
+        })
+    return [v0, v1], trace
 
-def text_to_binary(text):
-    return ''.join(format(ord(c), '08b') for c in text)
-
-def binary_to_text(binary_data):
-    chars = [binary_data[i:i+8] for i in range(0, len(binary_data), 8)]
-    return ''.join(chr(int(c, 2)) for c in chars if len(c) == 8)
-
-# ==========================================
-# EMBED
-# ==========================================
-
-def embed_message(img, message, key, r, x0):
-
-    full_message = message + DELIMITER
-
-    encrypted_msg = vigenere_encrypt(full_message, key)
-
-    binary_msg = text_to_binary(encrypted_msg)
-
-    total_pixels = img.size
-
-    if len(binary_msg) > total_pixels:
-        raise ValueError("Kapasitas gambar terlalu kecil")
-
-    indices = generate_chaotic_indices(
-        r,
-        x0,
-        total_pixels,
-        len(binary_msg)
-    )
-
-    flat_img = img.flatten()
-
-    for i in range(len(binary_msg)):
-        idx = indices[i]
-        flat_img[idx] = (flat_img[idx] & 254) | int(binary_msg[i])
-
-    return flat_img.reshape(img.shape)
+def decipher_block_trace(v, k):
+    v0, v1 = v[0], v[1]
+    k0, k1, k2, k3 = k[0], k[1], k[2], k[3]
+    sum_val = 0xC6EF3720
+    trace = []
+    for r in range(32):
+        v1 = (v1 - (((v0 << 4) + k2) ^ (v0 + sum_val) ^ ((v0 >> 5) + k3))) & 0xFFFFFFFF
+        v0 = (v0 - (((v1 << 4) + k0) ^ (v1 + sum_val) ^ ((v1 >> 5) + k1))) & 0xFFFFFFFF
+        trace.append({
+            'round': 32 - r,
+            'sum': f"0x{sum_val:08X}",
+            'v0': f"0x{v0:08X}",
+            'v1': f"0x{v1:08X}"
+        })
+        sum_val = (sum_val - DELTA) & 0xFFFFFFFF
+    trace.reverse()
+    return [v0, v1], trace
 
 # ==========================================
-# EXTRACT
+# ROUTING FLASK HANDLERS
 # ==========================================
-
-def extract_message(stego_img, key, r, x0):
-
-    try:
-
-        flat_img = stego_img.flatten()
-
-        total_pixels = stego_img.size
-
-        # Batasi ekstraksi
-        max_bits_to_extract = min(3000, total_pixels)
-
-        indices = generate_chaotic_indices(
-            r,
-            x0,
-            total_pixels,
-            max_bits_to_extract
-        )
-
-        binary_msg = ""
-
-        for idx in indices:
-
-            binary_msg += str(flat_img[idx] & 1)
-
-            # per 8 bit = 1 karakter
-            if len(binary_msg) % 8 == 0:
-
-                current_text = binary_to_text(binary_msg)
-
-                try:
-
-                    decrypted_text = vigenere_decrypt(
-                        current_text,
-                        key
-                    )
-
-                    # delimiter ditemukan
-                    if decrypted_text.endswith(DELIMITER):
-
-                        result = decrypted_text[
-                            :-len(DELIMITER)
-                        ]
-
-                        # validasi printable chars
-                        if result.isprintable():
-
-                            return result
-
-                except:
-                    continue
-
-        return None
-
-    except Exception as e:
-
-        print("Extract Error:", e)
-
-        return None
-
-# ==========================================
-# ROUTES
-# ==========================================
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-# ==========================================
-# ENCRYPT
-# ==========================================
-
-@app.route("/", methods=["GET", "POST"])
-def encrypt():
-
-    if request.method == "POST":
-
-        file = request.files["image"]
-
-        message = request.form["message"]
-
-        key = request.form["key"]
-
-        r = float(request.form["r"])
-
-        x0 = float(request.form["x0"])
-
-        upload_path = os.path.join(
-            UPLOAD_FOLDER,
-            file.filename
-        )
-
-        file.save(upload_path)
-
-        img = cv2.imread(upload_path)
-
-        stego = embed_message(
-            img,
-            message,
-            key,
-            r,
-            x0
-        )
-
-        output_path = os.path.join(
-            OUTPUT_FOLDER,
-            "stego.png"
-        )
-
-        cv2.imwrite(output_path, stego)
-
-        nilai_psnr = psnr(img, stego)
-
-        nilai_ssim = ssim(
-            img,
-            stego,
-            channel_axis=2
-        )
-
-        ssim_str = str(nilai_ssim)[:7]
-
-        return render_template(
-            "index.html",
-            success=True,
-            psnr=round(nilai_psnr, 2),
-            ssim=ssim_str,
-            image_path="stego.png"
-        )
-
-    return render_template("index.html")
-
-# ==========================================
-# DOWNLOAD
-# ==========================================
-
-@app.route("/download")
-def download():
-    return send_file(
-        "outputs/stego.png",
-        as_attachment=True
-    )
-
-# ==========================================
-# DECRYPT
-# ==========================================
-
-@app.route("/decrypt", methods=["GET", "POST"])
-def decrypt():
-
-    if request.method == "POST":
-
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    result = None
+    if request.method == 'POST':
+        message = request.form.get('message', '').strip()
+        key_input = request.form.get('key', '').strip()
         try:
-
-            file = request.files["image"]
-
-            key = request.form["key"]
-
-            r = float(request.form["r"])
-
-            x0 = float(request.form["x0"])
-
-            upload_path = os.path.join(
-                UPLOAD_FOLDER,
-                file.filename
-            )
-
-            file.save(upload_path)
-
-            img = cv2.imread(upload_path)
-
-            if img is None:
-
-                return render_template(
-                    "decrypt.html",
-                    error="Gambar gagal dibaca."
-                )
-
-            result = extract_message(
-                img,
-                key,
-                r,
-                x0
-            )
-
-            if result is None:
-
-                return render_template(
-                    "decrypt.html",
-                    error="Pesan tidak ditemukan. Kemungkinan gambar bukan stego image atau kunci salah."
-                )
-
-            return render_template(
-                "decrypt.html",
-                result=result
-            )
-
+            if not message or not key_input:
+                raise ValueError("Parameter data pesan teks dan kunci tidak boleh kosong.")
+            
+            secret_key = parse_key_string(key_input)
+            data = pad(message.encode('utf-8'))
+            ciphertext = b''
+            logs = []
+            
+            for idx, i in enumerate(range(0, len(data), 8)):
+                block = data[i:i+8]
+                v = struct.unpack('>LL', block)
+                enc_v, block_trace = encipher_block_trace(v, secret_key)
+                ciphertext += struct.pack('>LL', enc_v[0], enc_v[1])
+                logs.append({
+                    'index': idx + 1,
+                    'raw': block.hex().upper(),
+                    'init': [f"0x{v[0]:08X}", f"0x{v[1]:08X}"],
+                    'rounds': block_trace,
+                    'final': [f"0x{enc_v[0]:08X}", f"0x{enc_v[1]:08X}"]
+                })
+            
+            result = {
+                'input': message,
+                'output': ciphertext.hex().upper(),
+                'logs': logs
+            }
         except Exception as e:
+            result = {'error': str(e)}
+    return render_template('index.html', result=result)
 
-            return render_template(
-                "decrypt.html",
-                error=f"Terjadi kesalahan: {str(e)}"
-            )
+@app.route('/decrypt', methods=['GET', 'POST'])
+def decrypt():
+    result = None
+    if request.method == 'POST':
+        ciphertext_hex = request.form.get('ciphertext', '').strip()
+        key_input = request.form.get('key', '').strip()
+        try:
+            if not ciphertext_hex or not key_input:
+                raise ValueError("Input ciphertext hexadecimal dan kunci tidak valid.")
+            
+            secret_key = parse_key_string(key_input)
+            ciphertext_bytes = bytes.fromhex(ciphertext_hex)
+            plaintext = b''
+            logs = []
+            
+            for idx, i in enumerate(range(0, len(ciphertext_bytes), 8)):
+                block = ciphertext_bytes[i:i+8]
+                v = struct.unpack('>LL', block)
+                dec_v, block_trace = decipher_block_trace(v, secret_key)
+                plaintext += struct.pack('>LL', dec_v[0], dec_v[1])
+                logs.append({
+                    'index': idx + 1,
+                    'raw': block.hex().upper(),
+                    'init': [f"0x{v[0]:08X}", f"0x{v[1]:08X}"],
+                    'rounds': block_trace,
+                    'final': [f"0x{dec_v[0]:08X}", f"0x{dec_v[1]:08X}"]
+                })
+            
+            decrypted_message = unpad(plaintext).decode('utf-8')
+            result = {
+                'input': ciphertext_hex,
+                'output': decrypted_message,
+                'logs': logs
+            }
+        except Exception as e:
+            result = {'error': str(e)}
+    return render_template('decrypt.html', result=result)
 
-    return render_template("decrypt.html")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
