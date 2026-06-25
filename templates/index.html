@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>TEA - Enkripsi & Visualisasi</title>
+    <title>Aplikasi Kriptografi TEA - Single Page</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}" />
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
@@ -10,7 +10,7 @@
 
     <div class="flex flex-col px-28 pt-10 pb-16">
       <h2 class="text-5xl font-bold text-[#163b42] mb-8">
-        Enkripsi Teks (Plaintext &rarr; Ciphertext)
+        Enkripsi & Dekripsi Pesan TEA
       </h2>
 
       {% if result and result.error %}
@@ -23,42 +23,46 @@
       {% if result and not result.error %}
       <div class="grid grid-cols-1 gap-4 mb-6">
         <div class="border border-green-300 rounded-2xl p-6 bg-green-50 shadow-sm">
-          <h3 class="text-2xl font-bold text-green-700 mb-4">Proses Enkripsi Sukses</h3>
+          <h3 class="text-2xl font-bold text-green-700 mb-4">Proses {{ result.mode }} Berhasil</h3>
           <div class="space-y-3 font-mono text-sm">
-            <p class="bg-white p-3 rounded-xl border"><span class="font-bold text-gray-500 block text-xs mb-1">PLAINTEXT ASLI:</span> <span class="text-gray-800 break-all">{{ result.input }}</span></p>
-            <p class="bg-white p-3 rounded-xl border border-green-200"><span class="font-bold text-green-600 block text-xs mb-1">CIPHERTEXT (HEXADECIMAL):</span> <span class="text-xl text-green-700 font-bold break-all">{{ result.output }}</span></p>
+            <p class="bg-white p-3 rounded-xl border">
+              <span class="font-bold text-gray-500 block text-xs mb-1">DATA INPUT:</span> 
+              <span class="text-gray-800 break-all">{{ result.input }}</span>
+            </p>
+            <p class="bg-white p-3 rounded-xl border border-green-200">
+              <span class="font-bold text-green-600 block text-xs mb-1">HASIL OUTPUT:</span> 
+              <span class="text-xl text-green-700 font-bold break-all">{{ result.output }}</span>
+            </p>
           </div>
         </div>
       </div>
       {% endif %}
 
       <div class="grid grid-cols-2 gap-6 items-stretch mb-8">
-        <div class="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm flex flex-col justify-between">
-          <form method="POST" class="space-y-5">
-            <div>
-              <label for="message" class="block mb-2 font-medium text-gray-700">Pesan Rahasia (Plaintext)</label>
-              <textarea name="message" placeholder="Ketik pesan rahasia yang ingin dienkripsi di sini..." class="px-4 py-3 w-full border rounded-xl h-36 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#163b42]" required>{{ result.input if result and not result.error else '' }}</textarea>
+        <div class="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm flex flex-col justify-between space-y-5">
+          <form method="POST" class="space-y-6 w-full flex flex-col justify-between h-full">
+            <div class="flex-1">
+              <label for="user_input" class="block mb-2 font-medium text-gray-700">Input Data (Teks / Ciphertext Hex)</label>
+              <textarea name="user_input" placeholder="Ketik plaintext biasa untuk enkripsi ATAU masukkan string hexadecimal untuk dekripsi..." class="px-4 py-3 w-full border rounded-xl h-44 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#163b42]" required>{{ result.input if result and not result.error else '' }}</textarea>
             </div>
 
-            <div>
-              <label for="key" class="block mb-2 font-medium text-gray-700" title="Kunci teks bebas yang nantinya dikonversi otomatis menjadi format 128-bit standar TEA.">
-                Kunci Rahasia (Passphrase Teks)
-              </label>
-              <input type="text" name="key" placeholder="Masukkan kata kunci pengaman..." class="px-4 py-3 w-full border rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#163b42]" required />
+            <div class="grid grid-cols-2 gap-4 pt-2">
+              <button type="submit" name="operation_type" value="encrypt" class="w-full px-4 py-3.5 rounded-xl bg-[#163b42] text-white font-semibold cursor-pointer hover:opacity-90 transition shadow-md">
+                Encrypt
+              </button>
+              <button type="submit" name="operation_type" value="decrypt" class="w-full px-4 py-3.5 rounded-xl bg-emerald-700 text-white font-semibold cursor-pointer hover:opacity-90 transition shadow-md">
+                Decrypt
+              </button>
             </div>
-
-            <button type="submit" class="w-full px-4 py-3.5 rounded-xl bg-[#163b42] text-white font-semibold cursor-pointer hover:opacity-90 transition shadow-md">
-              Mulai Enkripsi & Lacak Putaran
-            </button>
           </form>
         </div>
 
         <div class="border border-gray-200 rounded-2xl bg-white shadow-sm p-6 flex flex-col justify-center text-center">
           <div class="max-w-md mx-auto">
             <div class="w-16 h-16 bg-blue-50 text-[#163b42] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">ℹ️</div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Mekanisme Kerja Algoritma</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Sistem Integrasi Single Page</h3>
             <p class="text-gray-500 text-sm leading-relaxed">
-              Teks input akan dibagi ke dalam segmen kelompok blok data berukuran <strong>64-bit (8 karakter)</strong>. Apabila panjang teks tidak memenuhi kelipatan, sistem otomatis menginjeksikan skema <strong>Padding PKCS7</strong> sebelum mengarsitekturnya ke dalam tabel 32 putaran internal.
+              Pilih tombol <strong class="text-[#163b42]">Encrypt</strong> untuk mengonversi teks biasa menjadi format hex desimal, atau klik tombol <strong class="text-emerald-700">Decrypt</strong> untuk mengembalikan struktur cipher hex menjadi karakter tulisan asli secara instan.
             </p>
           </div>
         </div>
@@ -66,12 +70,12 @@
 
       {% if result and not result.error %}
       <div class="mt-4 space-y-8">
-        <h3 class="text-3xl font-bold text-[#163b42] border-b pb-2">Analisis Visual Eksekusi Putaran TEA</h3>
+        <h3 class="text-3xl font-bold text-[#163b42] border-b pb-2">Analisis Visual Putaran Internal Modul {{ result.mode }}</h3>
         
         {% for block in result.logs %}
         <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
           <div class="flex flex-wrap justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100 gap-2">
-            <span class="font-mono font-bold text-amber-700 text-base">SEGMEN DATA BLOK #{{ block.index }} (Hex Mentah: {{ block.raw }})</span>
+            <span class="font-mono font-bold text-amber-700 text-base">SEGMEN DATA BLOK #{{ block.index }} (Hex: {{ block.raw }})</span>
             <span class="font-mono text-xs text-gray-600">Register Masukan &rarr; v0: <b class="text-blue-600">{{ block.init[0] }}</b> | v1: <b class="text-blue-600">{{ block.init[1] }}</b></span>
           </div>
 
@@ -81,8 +85,8 @@
                 <tr class="bg-gray-100 text-gray-700 border-b">
                   <th class="p-3 text-center border-r w-20">Round</th>
                   <th class="p-3 border-r">Accumulator Value (Sum)</th>
-                  <th class="p-3 border-r text-blue-700">Register v0 (32-bit)</th>
-                  <th class="p-3 text-emerald-700">Register v1 (32-bit)</th>
+                  <th class="p-3 border-r text-blue-700">Register v0</th>
+                  <th class="p-3 text-emerald-700">Register v1</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
