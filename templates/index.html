@@ -4,111 +4,171 @@
     <title>Aplikasi Kriptografi TEA - Single Page</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   </head>
   <body class="bg-gray-100 min-h-screen">
     {% include 'components/navbar.html' %}
-
-    <div class="flex flex-col px-28 pt-10 pb-16">
-      <h2 class="text-5xl font-bold text-[#163b42] mb-8">
+    
+    <div class="flex flex-col px-6 md:px-28 pt-10 pb-16 max-w-7xl mx-auto">
+      <h2 class="text-4xl font-bold text-[#163b42] mb-8">
         Enkripsi & Dekripsi Pesan TEA
       </h2>
 
       {% if result and result.error %}
-      <div class="mb-6 border border-red-300 bg-red-50 rounded-2xl p-6 shadow-sm">
-        <h3 class="text-2xl font-bold text-red-700 mb-2">Terjadi Kesalahan</h3>
+      <div class="mb-6 border border-red-300 bg-red-50 rounded-2xl p-6 shadow-sm animate-pulse">
+        <h3 class="text-xl font-bold text-red-700 mb-2">Terjadi Kesalahan</h3>
         <p class="text-red-600">{{ result.error }}</p>
       </div>
       {% endif %}
 
-      {% if result and not result.error %}
-      <div class="grid grid-cols-1 gap-4 mb-6">
-        <div class="border border-green-300 rounded-2xl p-6 bg-green-50 shadow-sm">
-          <h3 class="text-2xl font-bold text-green-700 mb-4">Proses {{ result.mode }} Berhasil</h3>
-          <div class="space-y-3 font-mono text-sm">
-            <p class="bg-white p-3 rounded-xl border">
-              <span class="font-bold text-gray-500 block text-xs mb-1">DATA INPUT:</span> 
-              <span class="text-gray-800 break-all">{{ result.input }}</span>
-            </p>
-            <p class="bg-white p-3 rounded-xl border border-green-200">
-              <span class="font-bold text-green-600 block text-xs mb-1">HASIL OUTPUT:</span> 
-              <span class="text-xl text-green-700 font-bold break-all">{{ result.output }}</span>
-            </p>
+      <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8 mb-8">
+        <form method="POST" action="/">
+          <div class="flex flex-col mb-6">
+            <label class="text-gray-700 font-semibold mb-2 text-lg">Masukkan Teks:</label>
+            <textarea
+              id="user_input"
+              name="user_input"
+              rows="4"
+              placeholder="Ketik plaintext untuk enkripsi ATAU paste nilai Hex untuk dekripsi..."
+              class="w-full border border-gray-300 rounded-xl p-4 font-mono text-base focus:outline-none focus:ring-2 focus:ring-[#163b42] focus:border-transparent transition"
+            >{% if result and not result.error %}{{ result.input }}{% endif %}</textarea>
           </div>
-        </div>
-      </div>
-      {% endif %}
 
-      <div class="grid grid-cols-2 gap-6 items-stretch mb-8">
-        <div class="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm flex flex-col justify-between space-y-5">
-          <form method="POST" class="space-y-6 w-full flex flex-col justify-between h-full">
-            <div class="flex-1">
-              <label for="user_input" class="block mb-2 font-medium text-gray-700">Input Data (Teks / Ciphertext Hex)</label>
-              <textarea name="user_input" placeholder="Ketik plaintext biasa untuk enkripsi ATAU masukkan string hexadecimal untuk dekripsi..." class="px-4 py-3 w-full border rounded-xl h-44 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#163b42]" required>{{ result.input if result and not result.error else '' }}</textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 pt-2">
-              <button type="submit" name="operation_type" value="encrypt" class="w-full px-4 py-3.5 rounded-xl bg-[#163b42] text-white font-semibold cursor-pointer hover:opacity-90 transition shadow-md">
-                Encrypt
-              </button>
-              <button type="submit" name="operation_type" value="decrypt" class="w-full px-4 py-3.5 rounded-xl bg-emerald-700 text-white font-semibold cursor-pointer hover:opacity-90 transition shadow-md">
-                Decrypt
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div class="border border-gray-200 rounded-2xl bg-white shadow-sm p-6 flex flex-col justify-center text-center">
-          <div class="max-w-md mx-auto">
-            <div class="w-16 h-16 bg-blue-50 text-[#163b42] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">ℹ️</div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Sistem Integrasi Single Page</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">
-              Pilih tombol <strong class="text-[#163b42]">Encrypt</strong> untuk mengonversi teks biasa menjadi format hex desimal, atau klik tombol <strong class="text-emerald-700">Decrypt</strong> untuk mengembalikan struktur cipher hex menjadi karakter tulisan asli secara instan.
-            </p>
+          <div class="flex flex-wrap gap-4">
+            <button
+              type="submit"
+              name="operation_type"
+              value="encrypt"
+              class="flex-1 min-w-[150px] bg-[#163b42] text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:bg-[#1f4e57] active:scale-[0.98] transition cursor-pointer text-center flex items-center justify-center gap-2"
+            >
+              <i class="fa-solid fa-lock"></i> Enkripsi
+            </button>
+            <button
+              type="submit"
+              name="operation_type"
+              value="decrypt"
+              class="flex-1 min-w-[150px] bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:bg-emerald-800 active:scale-[0.98] transition cursor-pointer text-center flex items-center justify-center gap-2"
+            >
+              <i class="fa-solid fa-unlock-keyhole"></i> Dekripsi
+            </button>
+            <button
+              type="button"
+              onclick="clearInput()"
+              class="px-6 py-3.5 bg-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-300 transition cursor-pointer"
+            >
+              Clear
+            </button>
           </div>
-        </div>
+        </form>
       </div>
 
       {% if result and not result.error %}
-      <div class="mt-4 space-y-8">
-        <h3 class="text-3xl font-bold text-[#163b42] border-b pb-2">Analisis Visual Putaran Internal Modul {{ result.mode }}</h3>
+      <div class="grid grid-cols-1 gap-6 mb-8">
+        <div class="border {% if result.operation == 'encrypt' %}border-blue-300 bg-blue-50/50{% else %}border-emerald-300 bg-emerald-50/50{% endif %} rounded-2xl p-6 shadow-sm">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold {% if result.operation == 'encrypt' %}text-blue-800{% else %}text-emerald-800{% endif %}">
+              Proses {{ result.mode }} Berhasil
+            </h3>
+            
+            <div class="flex gap-2">
+              {% if result.operation == 'encrypt' %}
+              <button 
+                onclick="useResult()" 
+                class="bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 transition cursor-pointer flex items-center gap-1.5"
+              >
+                <i class="fa-solid fa-reply-all"></i> Gunakan Untuk Dekripsi
+              </button>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="bg-white border rounded-xl p-4 font-mono text-lg font-bold tracking-wide break-all text-gray-800 flex justify-between items-center gap-4">
+            <span id="output_text">{{ result.output }}</span>
+            <button 
+              onclick="copyText()" 
+              title="Copy Hasil"
+              class="text-gray-400 hover:text-gray-700 p-2.5 rounded-lg hover:bg-gray-100 transition cursor-pointer flex-shrink-0 text-base"
+            >
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">Detail Pelacakan Algoritma (Tingkat Blok)</h3>
         
         {% for block in result.logs %}
-        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
-          <div class="flex flex-wrap justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100 gap-2">
-            <span class="font-mono font-bold text-amber-700 text-base">SEGMEN DATA BLOK #{{ block.index }} (Hex: {{ block.raw }})</span>
-            <span class="font-mono text-xs text-gray-600">Register Masukan &rarr; v0: <b class="text-blue-600">{{ block.init[0] }}</b> | v1: <b class="text-blue-600">{{ block.init[1] }}</b></span>
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+          
+          <div class="p-5 {% if result.operation == 'encrypt' %}bg-slate-900 text-white{% else %}bg-emerald-950 text-white{% endif %} flex flex-wrap justify-between items-center gap-4">
+            <div>
+              <span class="bg-white/20 text-xs uppercase tracking-wider font-bold px-2.5 py-1 rounded-md">Blok #{{ block.index }}</span>
+              <h4 class="text-base font-mono mt-1 text-gray-300">Data Raw: <span class="text-white font-bold">{{ block.raw }}</span></h4>
+            </div>
+              
           </div>
 
-          <div class="overflow-x-auto rounded-xl border border-gray-200">
-            <table class="w-full font-mono text-xs text-left border-collapse">
-              <thead>
-                <tr class="bg-gray-100 text-gray-700 border-b">
-                  <th class="p-3 text-center border-r w-20">Round</th>
-                  <th class="p-3 border-r">Accumulator Value (Sum)</th>
-                  <th class="p-3 border-r text-blue-700">Register v0</th>
-                  <th class="p-3 text-emerald-700">Register v1</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                {% for r in block.rounds %}
-                <tr class="hover:bg-slate-50/80 transition">
-                  <td class="p-2.5 text-center font-bold text-gray-400 bg-gray-50 border-r">{{ r.round }}</td>
-                  <td class="p-2.5 text-gray-600 border-r">{{ r.sum }}</td>
-                  <td class="p-2.5 text-blue-600 font-semibold border-r">{{ r.v0 }}</td>
-                  <td class="p-2.5 text-emerald-600 font-semibold">{{ r.v1 }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+          <details class="group">
+            <summary class="w-full p-4 bg-gray-50 text-sm font-semibold text-gray-700 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition border-b select-none">
+              <span>Lihat Pelacakan Operasi 32 Putaran (Round)</span>
+              <span class="transition group-open:rotate-180 text-gray-400">&darr;</span>
+            </summary>
+            
+            <div class="p-4 overflow-x-auto bg-white">
+              <table class="w-full text-left font-mono text-sm border-collapse">
+                <thead>
+                  <tr class="bg-gray-100 text-gray-700 border-b">
+                    <th class="p-3 text-center border-r w-20">Round</th>
+                    <th class="p-3 border-r">Accumulator Value (Sum)</th>
+                    <th class="p-3 border-r text-blue-700">Register v0</th>
+                    <th class="p-3 text-emerald-700">Register v1</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  {% for r in block.rounds %}
+                  <tr class="hover:bg-slate-50 transition">
+                    <td class="p-2.5 text-center font-bold text-gray-400 bg-gray-50 border-r">{{ r.round }}</td>
+                    <td class="p-2.5 text-gray-600 border-r">{{ r.sum }}</td>
+                    <td class="p-2.5 text-blue-600 font-semibold border-r">{{ r.v0 }}</td>
+                    <td class="p-2.5 text-emerald-600 font-semibold">{{ r.v1 }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </details>
 
-          <div class="bg-gray-50 p-3 rounded-xl border text-right font-mono text-xs text-gray-700">
-            Status Register Output Blok &rarr; v0: <span class="text-amber-600 font-bold">{{ block.final[0] }}</span> | v1: <span class="text-amber-600 font-bold">{{ block.final[1] }}</span>
+          <div class="bg-gray-50 p-3 text-right font-mono text-xs text-gray-500 border-t">
+            Status Terakhir: [v0] = {{ block.final[0] }}, [v1] = {{ block.final[1] }}
           </div>
         </div>
         {% endfor %}
       </div>
       {% endif %}
     </div>
+
+    <script>
+      function clearInput() {
+        document.getElementById('user_input').value = '';
+      }
+
+      function copyText() {
+        const outputEl = document.getElementById('output_text');
+        if (outputEl) {
+          navigator.clipboard.writeText(outputEl.textContent.trim());
+          alert('Hasil berhasil dicopy ke clipboard!');
+        }
+      }
+
+      function useResult() {
+        const outputEl = document.getElementById('output_text');
+        const inputEl = document.getElementById('user_input');
+        if (outputEl && inputEl) {
+          inputEl.value = outputEl.textContent.trim();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    </script>
   </body>
 </html>
